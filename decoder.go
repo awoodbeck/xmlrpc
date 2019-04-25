@@ -17,7 +17,7 @@ const (
 	iso8601Z       = "20060102T15:04:05Z07:00"
 	iso8601Hyphen  = "2006-01-02T15:04:05"
 	iso8601HyphenZ = "2006-01-02T15:04:05Z07:00"
-	value          = "value"
+	tagValue       = "value"
 )
 
 var (
@@ -51,7 +51,7 @@ func unmarshal(data []byte, v interface{}) (err error) {
 		}
 
 		if t, ok := tok.(xml.StartElement); ok {
-			if t.Name.Local == value {
+			if t.Name.Local == tagValue {
 				val := reflect.ValueOf(v)
 				if val.Kind() != reflect.Ptr {
 					return errors.New("non-pointer value passed to unmarshal")
@@ -92,7 +92,7 @@ func (dec *decoder) decodeValue(val reflect.Value) error {
 		}
 
 		if t, ok := tok.(xml.EndElement); ok {
-			if t.Name.Local == value {
+			if t.Name.Local == tagValue {
 				return nil
 			}
 
@@ -146,14 +146,9 @@ func (dec *decoder) decodeValue(val reflect.Value) error {
 
 			for i := 0; i < valType.NumField(); i++ {
 				field := valType.Field(i)
-				fieldVal := val.FieldByName(field.Name)
-
-				if fieldVal.CanSet() {
-					if fn := field.Tag.Get("xmlrpc"); fn != "" {
-						fields[fn] = fieldVal
-					} else {
-						fields[field.Name] = fieldVal
-					}
+				fErr := handleStructField(fields, field, val.FieldByName(field.Name))
+				if fErr != nil {
+					return fErr
 				}
 			}
 		} else {
@@ -195,7 +190,7 @@ func (dec *decoder) decodeValue(val reflect.Value) error {
 						if tok, err = dec.Token(); err != nil {
 							return err
 						}
-						if t, ok := tok.(xml.StartElement); ok && t.Name.Local == value {
+						if t, ok := tok.(xml.StartElement); ok && t.Name.Local == tagValue {
 							if err = dec.decodeValue(fv); err != nil {
 								return err
 							}
@@ -251,7 +246,7 @@ func (dec *decoder) decodeValue(val reflect.Value) error {
 
 					switch tt := tok.(type) {
 					case xml.StartElement:
-						if tt.Name.Local != value {
+						if tt.Name.Local != tagValue {
 							return errInvalidXML
 						}
 
@@ -467,6 +462,50 @@ func checkType(val reflect.Value, kinds ...reflect.Kind) error {
 	if !match {
 		return TypeMismatchError(fmt.Sprintf("error: type mismatch - can't unmarshal %v to %v",
 			val.Kind(), kinds[0]))
+	}
+
+	return nil
+}
+
+// handleStructField will add struct values to the fields map indexed by the "xmlrpc" tag, defaulting to the
+// struct field name if no tag is found. This function will recurse into embedded structs. Conflicting
+// tag/field names will result in an error.
+func handleStructField(fields map[string]reflect.Value, field reflect.StructField, val reflect.Value) error {
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			val.Set(reflect.New(val.Type().Elem()))
+		}
+
+		val = val.Elem()
+	}
+
+	if val.Kind() == reflect.Struct {
+		for i := 0; i < val.NumField(); i++ {
+			var sField reflect.StructField
+			if field.Type.Kind() == reflect.Ptr {
+				sField = field.Type.Elem().Field(i)
+			} else {
+				sField = field.Type.Field(i)
+			}
+
+			fErr := handleStructField(fields, sField, val.FieldByName(sField.Name))
+			if fErr != nil {
+				return fErr
+			}
+		}
+	}
+
+	if val.CanSet() {
+		fn := field.Tag.Get("xmlrpc")
+		if fn == "" {
+			fn = field.Name
+		}
+
+		if _, exists := fields[fn]; exists {
+			return fmt.Errorf("duplicate field %q in struct", fn)
+		}
+
+		fields[fn] = val
 	}
 
 	return nil

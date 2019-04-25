@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-const faultRespXml = `
+const faultRespXML = `
 <?xml version="1.0" encoding="UTF-8"?>
 <methodResponse>
   <fault>
@@ -28,7 +28,7 @@ const faultRespXml = `
 </methodResponse>`
 
 func Test_failedResponse(t *testing.T) {
-	resp := NewResponse([]byte(faultRespXml))
+	resp := NewResponse([]byte(faultRespXML))
 
 	if !resp.Failed() {
 		t.Fatal("Failed() error: expected true, got false")
@@ -65,12 +65,11 @@ const emptyValResp = `
 	</params>
 </methodResponse>`
 
-
 func Test_responseWithEmptyValue(t *testing.T) {
 	resp := NewResponse([]byte(emptyValResp))
 
-	result := struct{
-		User string `xmlrpc:"user"`
+	result := struct {
+		User  string `xmlrpc:"user"`
 		Token string `xmlrpc:"token"`
 	}{}
 

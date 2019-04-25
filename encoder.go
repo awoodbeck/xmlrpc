@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-type encodeFunc func(reflect.Value) ([]byte, error)
-
 func marshal(v interface{}) ([]byte, error) {
 	if v == nil {
 		return []byte{}, nil

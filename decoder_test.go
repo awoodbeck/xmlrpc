@@ -17,10 +17,7 @@ type book struct {
 	Amount int
 }
 
-type bookUnexported struct {
-	title  string
-	amount int
-}
+type bookUnexported struct{}
 
 var unmarshalTests = []struct {
 	value interface{}
@@ -50,24 +47,80 @@ var unmarshalTests = []struct {
 	{-12.134, new(*float32), "<value><double>-12.134</double></value>"},
 
 	// datetime.iso8601
-	{_time("2013-12-09T21:00:12Z"), new(*time.Time), "<value><dateTime.iso8601>20131209T21:00:12</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12Z"), new(*time.Time), "<value><dateTime.iso8601>20131209T21:00:12Z</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12-01:00"), new(*time.Time), "<value><dateTime.iso8601>20131209T21:00:12-01:00</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12+01:00"), new(*time.Time), "<value><dateTime.iso8601>20131209T21:00:12+01:00</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12Z"), new(*time.Time), "<value><dateTime.iso8601>2013-12-09T21:00:12</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12Z"), new(*time.Time), "<value><dateTime.iso8601>2013-12-09T21:00:12Z</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12-01:00"), new(*time.Time), "<value><dateTime.iso8601>2013-12-09T21:00:12-01:00</dateTime.iso8601></value>"},
-	{_time("2013-12-09T21:00:12+01:00"), new(*time.Time), "<value><dateTime.iso8601>2013-12-09T21:00:12+01:00</dateTime.iso8601></value>"},
+	{
+		_time("2013-12-09T21:00:12Z"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>20131209T21:00:12</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12Z"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>20131209T21:00:12Z</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12-01:00"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>20131209T21:00:12-01:00</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12+01:00"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>20131209T21:00:12+01:00</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12Z"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>2013-12-09T21:00:12</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12Z"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>2013-12-09T21:00:12Z</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12-01:00"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>2013-12-09T21:00:12-01:00</dateTime.iso8601></value>",
+	},
+	{
+		_time("2013-12-09T21:00:12+01:00"),
+		new(*time.Time),
+		"<value><dateTime.iso8601>2013-12-09T21:00:12+01:00</dateTime.iso8601></value>",
+	},
 
 	// array
-	{[]int{1, 5, 7}, new(*[]int), "<value><array><data><value><int>1</int></value><value><int>5</int></value><value><int>7</int></value></data></array></value>"},
-	{[]interface{}{"A", "5"}, new(interface{}), "<value><array><data><value><string>A</string></value><value><string>5</string></value></data></array></value>"},
-	{[]interface{}{"A", int64(5)}, new(interface{}), "<value><array><data><value><string>A</string></value><value><int>5</int></value></data></array></value>"},
+	{
+		[]int{1, 5, 7},
+		new(*[]int),
+		"<value><array><data><value><int>1</int></value><value><int>5</int></value><value><int>7</int></value></data></array></value>",
+	},
+	{
+		[]interface{}{"A", "5"},
+		new(interface{}),
+		"<value><array><data><value><string>A</string></value><value><string>5</string></value></data></array></value>",
+	},
+	{
+		[]interface{}{"A", int64(5)},
+		new(interface{}),
+		"<value><array><data><value><string>A</string></value><value><int>5</int></value></data></array></value>",
+	},
 
 	// struct
-	{book{"War and Piece", 20}, new(*book), "<value><struct><member><name>Title</name><value><string>War and Piece</string></value></member><member><name>Amount</name><value><int>20</int></value></member></struct></value>"},
-	{bookUnexported{}, new(*bookUnexported), "<value><struct><member><name>title</name><value><string>War and Piece</string></value></member><member><name>amount</name><value><int>20</int></value></member></struct></value>"},
-	{map[string]interface{}{"Name": "John Smith"}, new(interface{}), "<value><struct><member><name>Name</name><value><string>John Smith</string></value></member></struct></value>"},
+	{
+		book{"War and Piece", 20},
+		new(*book),
+		"<value><struct><member><name>Title</name><value><string>War and Piece</string></value></member><member><name>Amount</name><value><int>20</int></value></member></struct></value>",
+	},
+	{
+		bookUnexported{},
+		new(*bookUnexported),
+		"<value><struct><member><name>title</name><value><string>War and Piece</string></value></member><member><name>amount</name><value><int>20</int></value></member></struct></value>",
+	},
+	{
+		map[string]interface{}{"Name": "John Smith"},
+		new(interface{}),
+		"<value><struct><member><name>Name</name><value><string>John Smith</string></value></member></struct></value>",
+	},
 }
 
 func _time(s string) time.Time {
@@ -99,7 +152,7 @@ func Test_unmarshal(t *testing.T) {
 			}
 		} else {
 			a1 := v.Interface()
-			a2 := interface{}(tt.value)
+			a2 := tt.value
 
 			if !reflect.DeepEqual(a1, a2) {
 				t.Fatalf("unmarshal error:\nexpected: %v\n     got: %v", tt.value, v.Interface())
